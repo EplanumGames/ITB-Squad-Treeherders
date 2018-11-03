@@ -157,12 +157,9 @@ end
 function forestUtils:getNumForestsInPlus(p)
 	local count = 0
 	
-	if self.IsAForest(p) then
+	if self.isAForest(p) then
 		count = count + 1
 	end
-	
-	local rallyPs = {p2, p2 + DIR_VECTORS[attackDir], p2 + DIR_VECTORS[(attackDir + 1) % 4],
-		p2 + DIR_VECTORS[(attackDir + 2) % 4], p2 + DIR_VECTORS[(attackDir + 3) % 4]}
 	
 	for dir = 0, 3 do
 		if forestUtils.isAForest(p + DIR_VECTORS[dir]) then

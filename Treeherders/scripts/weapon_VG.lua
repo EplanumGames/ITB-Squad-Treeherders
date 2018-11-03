@@ -5,6 +5,7 @@ Eplanum_TH_ViolentGrowth = Skill:new
 	Rarity = 1,
 	
 	Explosion = "",
+	--TODO sounds
 --	LaunchSound = "/weapons/titan_fist",
 --	ImpactSound = "/impact/generic/tractor_beam",
 	
@@ -12,33 +13,10 @@ Eplanum_TH_ViolentGrowth = Skill:new
 	PathSize = 1,
     Damage = 1,
 	
-    PowerCost = 0,
+    PowerCost = 1,
     Upgrades = 2,
-    UpgradeCost = { 2, 1 },
+    UpgradeCost = { 1, 1 },
 	
-    TipImage = {
-		Unit = Point(2,3),
-		Target = Point(2,2),
-		Enemy = Point(2,2),
-		Forest = Point(1,2),
-	},
-	
-	ForestDamageBounce = -2,
-	NonForestBounce = 2,
-	ForestGenBounce = forestUtils.floraformBounce,
-	
-	ForestToExpand = 2,
-	ForestGenDamage = 0,
-	SurroundedDamage = 0,
-	RallyCap = 0,
-	
-	ExtraIfTargetForest = false,
-	SeekVek = false,
-	PushTarget = true,
-}
-
-Eplanum_TH_ViolentGrowth_A = Eplanum_TH_ViolentGrowth:new
-{
     TipImage = {
 		Unit = Point(2,3),
 		Target = Point(2,2),
@@ -48,43 +26,45 @@ Eplanum_TH_ViolentGrowth_A = Eplanum_TH_ViolentGrowth:new
 		Forest2 = Point(1,2),
 	},
 	
-	ForestGenDamage = 1,
-	ExtraIfTargetForest = true,
+	ForestDamageBounce = -2,
+	NonForestBounce = 2,
+	ForestGenBounce = forestUtils.floraformBounce,
+	
+	PushTarget = false,
 	SeekVek = true,
+	SlowEnemyMaxMove = 2,
+	
+	ForestToExpand = 1,
+	SlowEnemy = false,
+}
+
+Eplanum_TH_ViolentGrowth_A = Eplanum_TH_ViolentGrowth:new
+{
+	SlowEnemy = true,
 }
 
 Eplanum_TH_ViolentGrowth_B = Eplanum_TH_ViolentGrowth:new
 {
-	RallyCap = 1,
+	ForestToExpand = 3,
 }
 
 Eplanum_TH_ViolentGrowth_AB = Eplanum_TH_ViolentGrowth_A:new
 {	
-	RallyCap = 1,
+	ForestToExpand = 3,
 }
-local function forestOrFutureForestFn(p, ...)
-	local toCount = select(1, ...)
-	return forestUtils.isAForest(p) or toCount[forestUtils:getSpaceHash(p)]
-end 
 
-local function forestSurroundsFn(p, ...)
-	if forestOrFutureForestFn(p, ...) then
-		return true
+local function gameExistsAndEnsureGameVarsSetUp()
+	if not GAME then
+		return false
 	end
 	
-	local terrian = Board:GetTerrain(p)
-	local pawn = Board:GetPawn(p)
-	if terrian == TERRAIN_MOUNTAIN or terrian == TERRAIN_BUILDING then
-		return true
-	elseif pawn then
-		if pawn.Massive and (terrian == TERRAIN_WATER or terrian == TERRAIN_ACID or terrian == TERRAIN_LAVA) then
-			return false
-		elseif pawn:IsFlying() and (terrian == TERRAIN_WATER or terrian == TERRAIN_ACID or terrian == TERRAIN_LAVA or terrian == TERRAIN_HOLE) then
-			return false
-		elseif terrian == TERRAIN_WATER or terrian == TERRAIN_ACID or terrian == TERRAIN_LAVA or terrian == TERRAIN_HOLE then
-			return true
-		end
+	if not GAME.Eplanum_TH_ViolentGrowth then
+		GAME.Eplanum_TH_ViolentGrowth = {}
+		GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed = {}
+	elseif not GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed then
+		GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed = {}
 	end
+	return true
 end
 			
 function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
@@ -93,12 +73,6 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 
 	local ret = SkillEffect()
 	local attackDir = GetDirection(p2 - p1)
-	local leftToGen = self.ForestToExpand
-	
-	local rallyDamage = forestUtils:getNumForestsInPlus(p2)
-	if rallyDamage > self.RallyCap then
-		rallyDamage = self.RallyCap
-	end
 	
 	--generate forest on target and damage it
 	local pushDir = nil
@@ -106,14 +80,29 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 		pushDir = attackDir
 	end
 	
-	local damage = self.Damage
-	
+	--if it is a forest, cancel the target's attack
 	if forestUtils.isAForest(p2) then
-		ret:AddDamage(forestUtils:getSpaceDamageWithoutSettingFire(p2, self.Damage + rallyDamage, pushDir, false, false))
+		local clearSmoke = not Board:IsSmoke(p2)
+		
+		--create smoke to cancel the attack
+		cancelEffect = SpaceDamage(p2, DAMAGE_ZERO)
+		cancelEffect.iSmoke = EFFECT_CREATE
+		ret:AddDamage(cancelEffect)
+		
+		--wait slightly so it takes effect
+		ret:AddDelay(0.01)
+		
+		--remove it if it wasn't already a smoke tile
+		if clearSmoke then
+			local clearEffect = SpaceDamage(p2, DAMAGE_ZERO)
+			clearEffect.iSmoke = EFFECT_REMOVE
+			ret:AddDamage(clearEffect)
+		end
 		ret:AddBounce(p2, self.NonForestBounce)
+		
+	--otherwise if it can be floraformed, do so
 	elseif forestUtils.isSpaceFloraformable(p2) then
-		forestUtils:floraformSpace(ret, p2, self.Damage + self.ForestGenDamage + rallyDamage, pushDir, false, false)
-		leftToGen = leftToGen - 1
+		forestUtils:floraformSpace(ret, p2, self.Damage, pushDir, false, true)
 	end
 	
 	--small break to make the animation and move make more sense
@@ -125,13 +114,8 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	forestGroup.boardering[forestUtils:getSpaceHash(p2)] = nil
 	
 	--pick tiles to expand to and damage if appropriate
-	local expansionDamage = DAMAGE_ZERO
-	if self.ForestGenDamage > 0 then
-		expansionDamage = self.ForestGenDamage
-	end
-	
-	local newForests = forestUtils:floraformNumOfRandomSpaces(ret, randId, forestGroup.boardering, leftToGen,
-								expansionDamage, nil, true, true, true, nil, self.SeekVek, forestUtils:getSpaceHash(p1) + forestUtils:getSpaceHash(p2))
+	local newForests = forestUtils:floraformNumOfRandomSpaces(ret, randId, forestGroup.boardering, self.ForestToExpand,
+								self.Damage, nil, true, true, true, nil, self.SeekVek, forestUtils:getSpaceHash(p1) + (forestUtils:getSpaceHash(p2) * 100))
 	newForests[forestUtils:getSpaceHash(p2)] = p2
 	
 			
@@ -149,33 +133,48 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 		end
 	end
 	
-	--small break to make the animation and move make more sense
-	ret:AddDelay(0.4)
-	
-	--damage any enemies surrounded by forest
-	--dont forget to check the target when it is pushed
-	if self.SurroundedDamage > 0 then
-		local pushSpace = p2 + DIR_VECTORS[pushDir]
-		local surroundedEnemies = {}
-		for k, v in pairs(forestGroup.group) do
-			local unit = Board:GetPawn(v)
-			if unit and unit:IsEnemy() then
-				--The target pawn has special logic if we are pushing
-				if (not self.PushTarget) or unit:GetSpace() ~= p2 then
-					--we already know the unit is on the space
-					if unit:IsEnemy() and forestUtils:isSpaceSurroundedBy(v, forestSurroundsFn, newForests) then	
-						ret:AddDamage(forestUtils:getSpaceDamageWithoutSettingFire(v, self.SurroundedDamage, nil, true, true))
-						ret:AddBounce(v, self.NonForestBounce)
-					end
-				end
+	--any enemy in the forest, slow down temporarily if the powerup is enabled
+	if self.SlowEnemy and gameExistsAndEnsureGameVarsSetUp() then
+		for _, v in pairs(forestGroup.group) do
+			local enemy = Board:GetPawn(v)
+			if enemy and enemy:IsEnemy() and enemy:GetMoveSpeed() > self.SlowEnemyMaxMove then
+				GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed[v] = enemy:GetMoveSpeed()
+				--ret:AddScript([[Board:GetPawn(]]..v..[[):SetMoveSpeed(]]..self.SlowEnemyMaxMove..[[)]])
+				
+				local pos = enemy:GetSpace()
+				ret:AddScript([[Board:GetPawn(]]..enemy:GetId()..[[):SetMoveSpeed(]]..self.SlowEnemyMaxMove..[[)]])
 			end
-		end
-		
-		if (self.PushTarget and forestOrFutureForestFn(pushSpace, newForests) and forestUtils:isSpaceSurroundedBy(pushSpace, forestSurroundsFn, newForests)) then
-			ret:AddDamage(forestUtils:getSpaceDamageWithoutSettingFire(pushSpace, self.SurroundedDamage, nil, true, true))
-			ret:AddBounce(pushSpace, self.NonForestBounce)
 		end
 	end
 	
 	return ret
 end
+
+--ensure we start the mission with none slowed
+function Eplanum_TH_ViolentGrowth:GetPassiveSkillEffect_MissionStartHook()
+	if gameExistsAndEnsureGameVarsSetUp() then
+		GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed = {}
+	end
+end
+
+--undoes any temporarily speed modification of vek
+function Eplanum_TH_ViolentGrowth:GetPassiveSkillEffect_NextTurnHook()
+	if Game:GetTeamTurn() == TEAM_PLAYER and gameExistsAndEnsureGameVarsSetUp() then
+		for k, v in pairs(GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed) do
+			Board:GetPawn(k):SetMoveSpeed(v)
+		end
+		GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed = {}
+	end
+end
+
+--applies any temporarily speed modification to vek
+function Eplanum_TH_ViolentGrowth:GetPassiveSkillEffect_PostLoadGameHook()
+	if gameExistsAndEnsureGameVarsSetUp() then
+		for k, v in pairs(GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed) do
+			Board:GetPawn(k):SetMoveSpeed(self.SlowEnemyMaxMove)
+		end
+	end
+end
+
+--True means its not passive only weapon
+passiveEffect:addPassiveEffect("Eplanum_TH_ViolentGrowth", {"nextTurnHook", "postLoadGameHook", "missionStartHook"}, true)

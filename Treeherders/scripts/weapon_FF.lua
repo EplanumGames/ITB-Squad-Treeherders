@@ -5,7 +5,7 @@ Eplanum_TH_ForestFire = ArtilleryDefault:new
 	LaunchSound = "/weapons/artillery_volley",
 	ImpactSound = "/impact/generic/explosion",
 	UpShot = "effects/shotup_th_deadtree.png",
-	OuterAnimation = "airpush_"
+	OuterAnimation = "airpush_",
 	Rarity = 1,
 	
     PowerCost = 1,
@@ -74,19 +74,9 @@ function Eplanum_TH_ForestFire:GetSkillEffect(p1, p2)
 	end
 	
 	--floraform space around the mech
-	if self.AdaptiveRecoilFlora then
-		local surrounding = { p1 + forwardVect, p1 + sideVect1, p1 + backVect, p1 + sideVect2 }
-		local looking = true
-		for _, p in pairs(surrounding) do
-			if looking and Board:IsValid(p) and forestUtils.isSpaceFloraformable(p) then
-				forestUtils:floraformSpace(ret, p)
-				looking = false
-			end
-		end
-	else
-		if Board:IsValid(pBack) and forestUtils.isSpaceFloraformable(pBack) then
-			forestUtils:floraformSpace(ret, pBack)
-		end
+	local pBack = p1 + DIR_VECTORS[(attackDir + 2) % 4]
+	if Board:IsValid(pBack) and forestUtils.isSpaceFloraformable(pBack) then
+		forestUtils:floraformSpace(ret, pBack)
 	end
 
 	local damage = SpaceDamage(p2, self.DamageCenter)
