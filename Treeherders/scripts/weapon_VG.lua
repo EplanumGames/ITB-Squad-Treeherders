@@ -20,6 +20,7 @@ Eplanum_TH_ViolentGrowth = Skill:new
 		Unit = Point(2,3),
 		Target = Point(2,2),
 		Enemy = Point(2,2),
+		Forest = Point(1,2),
 	},
 	
 	ForestDamageBounce = -2,
@@ -47,7 +48,7 @@ Eplanum_TH_ViolentGrowth_A = Eplanum_TH_ViolentGrowth:new
 		Forest2 = Point(1,2),
 	},
 	
-	ForestGenDamage = 2,
+	ForestGenDamage = 1,
 	ExtraIfTargetForest = true,
 	SeekVek = true,
 }
@@ -94,16 +95,7 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	local attackDir = GetDirection(p2 - p1)
 	local leftToGen = self.ForestToExpand
 	
-	local rallyDamage = 0
-	local rallyPs = {p2, p2 + DIR_VECTORS[forwardDir], p2 + DIR_VECTORS[(forwardDir + 1) % 4],
-		p2 + DIR_VECTORS[(forwardDir + 2) % 4], p2 + DIR_VECTORS[(forwardDir + 3) % 4]
-	
-	for _, p in pairs(rallyPs) do
-		if forestUtils.isAForest(p) then
-			rallyDamage = rallyDamage + 1
-		end
-	end
-	
+	local rallyDamage = forestUtils:getNumForestsInPlus(p2)
 	if rallyDamage > self.RallyCap then
 		rallyDamage = self.RallyCap
 	end
@@ -117,13 +109,11 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	local damage = self.Damage
 	
 	if forestUtils.isAForest(p2) then
-		if forestUtils.isSpaceFloraformable(p2) then
-			ret:AddDamage(forestUtils:getSpaceDamageWithoutSettingFire(p2, self.Damage + rallyDamage, pushDir, false, false))
-			ret:AddBounce(p2, self.NonForestBounce)
-			leftToGen = leftToGen - 1
-		end
-	else
+		ret:AddDamage(forestUtils:getSpaceDamageWithoutSettingFire(p2, self.Damage + rallyDamage, pushDir, false, false))
+		ret:AddBounce(p2, self.NonForestBounce)
+	elseif forestUtils.isSpaceFloraformable(p2) then
 		forestUtils:floraformSpace(ret, p2, self.Damage + self.ForestGenDamage + rallyDamage, pushDir, false, false)
+		leftToGen = leftToGen - 1
 	end
 	
 	--small break to make the animation and move make more sense

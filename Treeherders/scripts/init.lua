@@ -9,11 +9,11 @@ local function init(self)
 			Path = "img/units/player",
 			ResourcePath = "units/player",
 
-			Default =           { PosX = -16, PosY = -11 },
-			Animated =          { PosX = -16, PosY = -11, NumFrames = 4 },
-			Broken =            { PosX = -16, PosY = -9 },
-			Submerged =         { PosX = -16, PosY = 2 },
-			SubmergedBroken =   { PosX = -19, PosY = 4 },
+			Default =           { PosX = -17, PosY = -11 },
+			Animated =          { PosX = -17, PosY = -11, NumFrames = 4 },
+			Broken =            { PosX = -17, PosY = -9 },
+			Submerged =         { PosX = -17, PosY = 2 },
+			SubmergedBroken =   { PosX = -20, PosY = 4 },
 			Icon =              {},
 		},
 	    {
