@@ -82,22 +82,7 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	
 	--if it is a forest, cancel the target's attack
 	if forestUtils.isAForest(p2) then
-		local clearSmoke = not Board:IsSmoke(p2)
-		
-		--create smoke to cancel the attack
-		cancelEffect = SpaceDamage(p2, DAMAGE_ZERO)
-		cancelEffect.iSmoke = EFFECT_CREATE
-		ret:AddDamage(cancelEffect)
-		
-		--wait slightly so it takes effect
-		ret:AddDelay(0.01)
-		
-		--remove it if it wasn't already a smoke tile
-		if clearSmoke then
-			local clearEffect = SpaceDamage(p2, DAMAGE_ZERO)
-			clearEffect.iSmoke = EFFECT_REMOVE
-			ret:AddDamage(clearEffect)
-		end
+		cancelAttack(p2)
 		ret:AddBounce(p2, self.NonForestBounce)
 		
 	--otherwise if it can be floraformed, do so
@@ -139,9 +124,6 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 			local enemy = Board:GetPawn(v)
 			if enemy and enemy:IsEnemy() and enemy:GetMoveSpeed() > self.SlowEnemyMaxMove then
 				GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed[v] = enemy:GetMoveSpeed()
-				--ret:AddScript([[Board:GetPawn(]]..v..[[):SetMoveSpeed(]]..self.SlowEnemyMaxMove..[[)]])
-				
-				local pos = enemy:GetSpace()
 				ret:AddScript([[Board:GetPawn(]]..enemy:GetId()..[[):SetMoveSpeed(]]..self.SlowEnemyMaxMove..[[)]])
 			end
 		end

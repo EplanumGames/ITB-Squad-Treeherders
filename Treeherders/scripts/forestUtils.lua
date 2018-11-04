@@ -262,6 +262,34 @@ end
 --TODO remove once integrated into modutils
 -------------------  TEMP MODUTIL FUNCTIONS  ----------------------------
 
+function forestUtils:cancelAttack(p)
+	--smoke and fire are mutually exclusive
+	local clearSmoke = not Board:IsSmoke(p2)
+	local setFire = Board:IsFire(p2)
+	
+	--remove any fire temporarily and create smoke to cancel the attack
+	cancelEffect = SpaceDamage(p2, DAMAGE_ZERO)
+	cancelEffect.iFire = EFFECT_REMOVE
+	cancelEffect.iSmoke = EFFECT_CREATE
+	ret:AddDamage(cancelEffect)
+	
+	--wait slightly so it takes effect
+	ret:AddDelay(0.01)
+	
+	--remove it if it wasn't already a smoke tile and set it back to
+	--fire if appropriate
+	if clearSmoke or setFire then
+		local clearEffect = SpaceDamage(p2, DAMAGE_ZERO)
+		if clearSmoke then
+			clearEffect.iSmoke = EFFECT_REMOVE
+		end
+		if setFire then
+			clearEffect.iFire = EFFECT_CREATE
+		end
+		ret:AddDamage(clearEffect)
+	end
+end
+
 function forestUtils:getTileFireType(point)
     local tileTable = treeherders_modApiExt.board:getTileTable(point)
 	if tileTable then
