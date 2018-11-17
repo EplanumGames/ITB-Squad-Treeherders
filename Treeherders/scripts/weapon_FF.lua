@@ -10,7 +10,7 @@ Eplanum_TH_ForestFire = ArtilleryDefault:new
 	
     PowerCost = 1,
     Upgrades = 2,
-    UpgradeCost = { 2, 2 },
+    UpgradeCost = { 1, 3 },
 	
     TipImage = {
 		Unit = Point(2,3),
@@ -22,10 +22,10 @@ Eplanum_TH_ForestFire = ArtilleryDefault:new
 	},
 	
 	ArtilleryStart = 2,
-	ArtillerySize = 8,
+	ArtillerySize = 4,
 	
 	Damage = 1,
-	DamageOuter = 1,
+	DamageOuter = DAMAGE_ZERO,
 	BuildingDamage = true,
 	BounceAmount = forestUtils.floraformBounce,
 	BounceOuterAmount = 2,
@@ -43,7 +43,7 @@ Eplanum_TH_ForestFire_B = Eplanum_TH_ForestFire:new
 {
 	UpShot = "effects/shotup_th_deadtree_3.png",
 	Damage = 2,
-	BounceAmount = forestUtils.floraformBounce * 2,
+	DamageOuter = 1,
 }
 
 Eplanum_TH_ForestFire_AB = Eplanum_TH_ForestFire_B:new
@@ -51,27 +51,41 @@ Eplanum_TH_ForestFire_AB = Eplanum_TH_ForestFire_B:new
 	BuildingDamage = false,
 }
 
-function Eplanum_TH_ForestFire:GetSkillEffect(p1, p2)
-	local ret = SkillEffect()
-	local attackDir = GetDirection(p2 - p1)
-	local adjForestCount = forestUtils:getNumForestsInPlus(p2)
-
-	local additionalMain = 0
-	local outerDirs = {}
-	if adjForestCount > 0 then
-		table.insert(outerDirs, (attackDir + 2) % 4)
+function Eplanum_TH_ForestFire:GetTargetArea(point)
+	--Get all spaces in the grouping
+	local forestGroup = forestUtils:getGroupingOfSpaces(point, forestUtils.isAForest)
+	
+	local ret = PointList()
+	--cant attack next to us
+	local points = {}
+	points[forestUtils:getSpaceHash(point)] = 0
+	points[forestUtils:getSpaceHash(point + DIR_VECTORS[0])] = 0
+	points[forestUtils:getSpaceHash(point + DIR_VECTORS[1])] = 0
+	points[forestUtils:getSpaceHash(point + DIR_VECTORS[2])] = 0
+	points[forestUtils:getSpaceHash(point + DIR_VECTORS[3])] = 0
 		
-		if adjForestCount > 1 then
-			table.insert(outerDirs, attackDir % 4)
-			table.insert(outerDirs, (attackDir + 1) % 4)
-			table.insert(outerDirs, (attackDir + 3) % 4)
-			
-			--TODO keep?
-			if adjForestCount > 2 then
-				additionalMain = (adjForestCount - 1) / 2
+	for k, v in pairs(forestGroup.group) do
+		for dir = 0, 3 do
+			for i = self.ArtilleryStart, self.ArtillerySize do
+				local curr = Point(v + DIR_VECTORS[dir] * i)
+				if not Board:IsValid(curr) then
+					break
+				end
+				
+				if not points[forestUtils:getSpaceHash(curr)] then
+					points[forestUtils:getSpaceHash(curr)] = 0
+					ret:push_back(curr)
+				end
 			end
 		end
 	end
+	
+	return ret
+end
+
+function Eplanum_TH_ForestFire:GetSkillEffect(p1, p2)
+	local ret = SkillEffect()
+	local attackDir = GetDirection(p2 - p1)
 	
 	--floraform space around the mech
 	local pBack = p1 + DIR_VECTORS[(attackDir + 2) % 4]
@@ -79,7 +93,7 @@ function Eplanum_TH_ForestFire:GetSkillEffect(p1, p2)
 		forestUtils:floraformSpace(ret, pBack)
 	end
 
-	local damage = SpaceDamage(p2, self.DamageCenter)
+	local damage = forestUtils:getFloraformSpaceDamage(p2, self.Damage, nil, false, not self.BuildingDamage)
 	if not self.BuildingDamage and Board:IsBuilding(p2) then
 		damage.iDamage = DAMAGE_ZERO
 	end
@@ -88,9 +102,9 @@ function Eplanum_TH_ForestFire:GetSkillEffect(p1, p2)
 	ret:AddArtillery(damage, self.UpShot)
 	ret:AddBounce(p2, 1)
 	
-	for _, dir in pairs(outerDirs) do
+	for dir = 0, 3 do
 		local currP = p2 + DIR_VECTORS[dir]
-		damage = SpaceDamage(currP,  self.DamageOuter)
+		local damage = forestUtils:getSpaceDamageWithoutSettingFire(currP, self.DamageOuter, dir, false, not self.BuildingDamage)
 		damage.sAnimation = self.OuterAnimation..dir
 		
 		if not self.BuildingDamage and Board:IsBuilding(currP) then	

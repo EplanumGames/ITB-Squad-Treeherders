@@ -68,7 +68,6 @@ local function gameExistsAndEnsureGameVarsSetUp()
 end
 			
 function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
-
 	local randId = "Eplanum_TH_ViolentGrowth"..tostring(Pawn:GetId())
 
 	local ret = SkillEffect()
@@ -82,7 +81,7 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	
 	--if it is a forest, cancel the target's attack
 	if forestUtils.isAForest(p2) then
-		cancelAttack(p2)
+		forestUtils:cancelAttack(p2, ret)
 		ret:AddBounce(p2, self.NonForestBounce)
 		
 	--otherwise if it can be floraformed, do so
@@ -123,6 +122,7 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 		for _, v in pairs(forestGroup.group) do
 			local enemy = Board:GetPawn(v)
 			if enemy and enemy:IsEnemy() and enemy:GetMoveSpeed() > self.SlowEnemyMaxMove then
+				--TODO AddMoveBonus --try this
 				GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed[v] = enemy:GetMoveSpeed()
 				ret:AddScript([[Board:GetPawn(]]..enemy:GetId()..[[):SetMoveSpeed(]]..self.SlowEnemyMaxMove..[[)]])
 			end
