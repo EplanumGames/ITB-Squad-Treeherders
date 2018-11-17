@@ -264,13 +264,13 @@ end
 
 function forestUtils:cancelAttack(p, effect)
 	effect:AddScript([[
-		local enemy = Board:GetPawn(Point(]]..p2.x..","..p2.y..[[))
+		local enemy = Board:GetPawn(Point(]]..p.x..","..p.y..[[))
 		if enemy then
 			enemy:ClearQueued()
 		end
-		Board:Ping(Point(]]..p2.x..","..p2.y..[[), GL_Color(210, 210, 210, 0))
+		Board:Ping(Point(]]..p.x..","..p.y..[[), GL_Color(210, 210, 210, 0))
 	]])
-	effect:AddDamage(SpaceDamage(p2, DAMAGE_ZERO))
+	effect:AddDamage(SpaceDamage(p, DAMAGE_ZERO))
 end
 
 function forestUtils:getTileFireType(point)

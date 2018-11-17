@@ -52,20 +52,6 @@ Eplanum_TH_ViolentGrowth_AB = Eplanum_TH_ViolentGrowth_A:new
 {	
 	ForestToExpand = 3,
 }
-
-local function gameExistsAndEnsureGameVarsSetUp()
-	if not GAME then
-		return false
-	end
-	
-	if not GAME.Eplanum_TH_ViolentGrowth then
-		GAME.Eplanum_TH_ViolentGrowth = {}
-		GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed = {}
-	elseif not GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed then
-		GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed = {}
-	end
-	return true
-end
 			
 function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	local randId = "Eplanum_TH_ViolentGrowth"..tostring(Pawn:GetId())
@@ -118,45 +104,24 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	end
 	
 	--any enemy in the forest, slow down temporarily if the powerup is enabled
-	if self.SlowEnemy and gameExistsAndEnsureGameVarsSetUp() then
+	if self.SlowEnemy then
 		for _, v in pairs(forestGroup.group) do
 			local enemy = Board:GetPawn(v)
-			if enemy and enemy:IsEnemy() and enemy:GetMoveSpeed() > self.SlowEnemyMaxMove then
-				--TODO AddMoveBonus --try this
-				GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed[v] = enemy:GetMoveSpeed()
-				ret:AddScript([[Board:GetPawn(]]..enemy:GetId()..[[):SetMoveSpeed(]]..self.SlowEnemyMaxMove..[[)]])
+			if enemy then
+				local speedDiff = self.SlowEnemyMaxMove - enemy:GetMoveSpeed()
+				if enemy:IsEnemy() and speedDiff < 0 then
+					LOG("H")
+					ret:AddScript([[Board:GetPawn(]]..enemy:GetId()..[[):AddMoveBonus(]]..speedDiff..[[)]])
+					LOG("H2")
+					--ret:AddScript([
+					--	LOG("H")
+					--	Board:GetPawn(]]..v..[[):AddMoveBonus(]]..speedDiff..[[)
+					--LOG("H2")
+					--]])
+				end
 			end
 		end
 	end
 	
 	return ret
 end
-
---ensure we start the mission with none slowed
-function Eplanum_TH_ViolentGrowth:GetPassiveSkillEffect_MissionStartHook()
-	if gameExistsAndEnsureGameVarsSetUp() then
-		GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed = {}
-	end
-end
-
---undoes any temporarily speed modification of vek
-function Eplanum_TH_ViolentGrowth:GetPassiveSkillEffect_NextTurnHook()
-	if Game:GetTeamTurn() == TEAM_PLAYER and gameExistsAndEnsureGameVarsSetUp() then
-		for k, v in pairs(GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed) do
-			Board:GetPawn(k):SetMoveSpeed(v)
-		end
-		GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed = {}
-	end
-end
-
---applies any temporarily speed modification to vek
-function Eplanum_TH_ViolentGrowth:GetPassiveSkillEffect_PostLoadGameHook()
-	if gameExistsAndEnsureGameVarsSetUp() then
-		for k, v in pairs(GAME.Eplanum_TH_ViolentGrowth.SlowedPawnsOrigSpeed) do
-			Board:GetPawn(k):SetMoveSpeed(self.SlowEnemyMaxMove)
-		end
-	end
-end
-
---True means its not passive only weapon
-passiveEffect:addPassiveEffect("Eplanum_TH_ViolentGrowth", {"nextTurnHook", "postLoadGameHook", "missionStartHook"}, true)
