@@ -3,7 +3,7 @@ Eplanum_TH_Passive_WakeTheForest = PassiveSkill:new
 	PowerCost = 1,
 	Icon = "weapons/passives/passive_th_forestArmor.png",
 	Upgrades = 2,
-	UpgradeCost = {1, 2},
+	UpgradeCost = {1, 1},
 	
 	Damage = 0,
 	
@@ -45,7 +45,6 @@ Eplanum_TH_Passive_WakeTheForest_B = Eplanum_TH_Passive_WakeTheForest:new
 
 Eplanum_TH_Passive_WakeTheForest_AB = Eplanum_TH_Passive_WakeTheForest_A:new
 {
-	Evacuate = true,
 	SeekMech = true,
 }
 

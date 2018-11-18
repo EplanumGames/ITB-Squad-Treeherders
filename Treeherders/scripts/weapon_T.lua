@@ -10,11 +10,11 @@ Eplanum_TH_Treevenge = Skill:new
 	Range = 1,
 	PathSize = 1,
 	Projectile = false,
-    Damage = 1,
+    Damage = 2,
 	
     PowerCost = 0,
     Upgrades = 2,
-    UpgradeCost = { 2, 2 },
+    UpgradeCost = { 1, 2 },
 	
     TipImage = {
 		Unit = Point(2,3),
@@ -23,33 +23,31 @@ Eplanum_TH_Treevenge = Skill:new
 		Enemy2 = Point(2,1),
 		Building = Point(3,2),
 		Forest = Point(3,1),
-		Forest2 = Point(1,0),
 		Fire = Point(3,1),
-		Fire2 = Point(1,0),
 	},
 	
 	BouncePerDamage = 3,
 	
+	DoesSplashDamage = false,
 	GenForestTarget = true,
 	ForestsPerDamage = 1,
-	DamageCap = 3,
+	DamageCap = 4,
 	BuildingImmune = false,
 }
 
 Eplanum_TH_Treevenge_A = Eplanum_TH_Treevenge:new
 {
-	Damage = 2,
-	DamageCap = 4,
+	BuildingImmune = true,
 }
 
 Eplanum_TH_Treevenge_B = Eplanum_TH_Treevenge:new
 {
-	BuildingImmune = true,
+	DoesSplashDamage = true,
 }
 
 Eplanum_TH_Treevenge_AB = Eplanum_TH_Treevenge_A:new
 {
-	BuildingImmune = true,
+	DoesSplashDamage = true,
 }
 
 function Eplanum_TH_Treevenge:GetSkillEffect(p1, p2)
@@ -64,7 +62,10 @@ function Eplanum_TH_Treevenge:GetSkillEffect(p1, p2)
 	end
 	
 	--detemine the splash damage
-	local splashDamage = math.floor(damage / 2)
+	local splashDamage = 0
+	if self.DoesSplashDamage then
+		splashDamage = math.floor(damage / 2)
+	end
 	
 	--do the main damage
 	local currDamage = nil
@@ -75,10 +76,7 @@ function Eplanum_TH_Treevenge:GetSkillEffect(p1, p2)
 	end
 	
 	ret:AddDamage(currDamage)
-	if damage > self.Damage then
-		ret:AddBounce(p2, damage * self.BouncePerDamage)
-	end
-
+	ret:AddBounce(p2, damage * self.BouncePerDamage)
 	ret:AddDelay(0.2)
 	
 	--do the splash damage

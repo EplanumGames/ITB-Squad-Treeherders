@@ -244,14 +244,16 @@ function forestUtils:floraformNumOfRandomSpaces(effect, randId, candidates, numT
 			end
 			
 			for i = 1, leftToFloraForm do
-				local index = predictableRandom:getNextValue(randId, 1, #keys, randSalt)	
-				local point = candidates[keys[i]]
-				
-				retList[keys[i]] = point
-				candidates[keys[i]] = nil
-				table.remove(keys, i)
-				
-				randFloraformDamage(effect, point, damage, pushDir, damageOnlyEnemy, allyImmune, buildingImmune)
+				if #keys > 0 then		
+					local index = predictableRandom:getNextValue(randId, 1, #keys, randSalt)	
+					local point = candidates[keys[i]]
+					
+					retList[keys[i]] = point
+					candidates[keys[i]] = nil
+					table.remove(keys, i)
+					
+					randFloraformDamage(effect, point, damage, pushDir, damageOnlyEnemy, allyImmune, buildingImmune)
+				end
 			end
 		end
 		

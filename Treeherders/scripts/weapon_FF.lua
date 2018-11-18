@@ -38,11 +38,11 @@ Eplanum_TH_ForestFire_A = Eplanum_TH_ForestFire:new
 	BuildingDamage = false,
 }
 
---make increase based on adjacent?
+--TODO make increase based on adjacent?
 Eplanum_TH_ForestFire_B = Eplanum_TH_ForestFire:new
 {
 	UpShot = "effects/shotup_th_deadtree_3.png",
-	Damage = 2,
+	Damage = 3,
 	DamageOuter = 1,
 }
 
