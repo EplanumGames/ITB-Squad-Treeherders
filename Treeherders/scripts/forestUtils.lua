@@ -200,6 +200,7 @@ function forestUtils:floraformNumOfRandomSpaces(effect, randId, candidates, numT
 				table.insert(toRemove, k)
 			end
 		end
+		
 		--do it in two loops to ensure the iterator isn't messed up by removing items mid iteration
 		for _, v in pairs(toRemove) do
 			candidates[v] = nil
@@ -213,7 +214,6 @@ function forestUtils:floraformNumOfRandomSpaces(effect, randId, candidates, numT
 			randFloraformDamage(effect, point, damage, pushDir, damageOnlyEnemy, allyImmune, buildingImmune)
 			retList[k] = point
 		end
-		return retList
 		
 	--if there are enough points choose some random ones
 	else
@@ -245,20 +245,25 @@ function forestUtils:floraformNumOfRandomSpaces(effect, randId, candidates, numT
 			
 			for i = 1, leftToFloraForm do
 				if #keys > 0 then		
-					local index = predictableRandom:getNextValue(randId, 1, #keys, randSalt)	
-					local point = candidates[keys[i]]
+					local index = predictableRandom:getNextValue(randId, 1, #keys, randSalt)
+					local point = candidates[keys[index]]
 					
-					retList[keys[i]] = point
-					candidates[keys[i]] = nil
-					table.remove(keys, i)
+					retList[keys[index]] = point
+					candidates[keys[index]] = nil
+					table.remove(keys, index)
 					
 					randFloraformDamage(effect, point, damage, pushDir, damageOnlyEnemy, allyImmune, buildingImmune)
 				end
 			end
 		end
-		
-		return retList
 	end
+	
+	
+	--Reset the roll at the end to keep the state clean in case this is rebuilt
+	--why this no work???
+	predictableRandom:resetToLastRoll(randId)
+	
+	return retList
 end
 
 --TODO remove once integrated into modutils

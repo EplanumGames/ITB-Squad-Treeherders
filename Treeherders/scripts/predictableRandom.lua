@@ -1,4 +1,6 @@
-predictableRandom = {}
+predictableRandom = {
+	DebugLog = false
+}
 
 --use a large value internally to preserve entropy
 predictableRandom.min_internal = 0
@@ -70,6 +72,7 @@ function predictableRandom:seed(id, seed)
 end
 
 function predictableRandom:roll(id)
+	if predictableRandom.DebugLog then LOG("Rolling "..id) end
 	rollRandomizer(getRandomizer(id))
 end
 
@@ -77,10 +80,12 @@ function predictableRandom:resetToLastRoll(id)
 	local rand = getRandomizer(id)
 	rand.currSeed = rand.savedSeed
 	rand.currCount = rand.savedCount
+	if predictableRandom.DebugLog then LOG("Reset "..id.." to count "..rand.currCount.." and seed "..rand.currSeed) end
 end
 
 function predictableRandom:getNextValue(id, minVal, maxVal, randSalt)
 	local rand = getRandomizer(id)
+	if predictableRandom.DebugLog then LOG("Getting value for "..id.." with seed "..rand.currSeed.." and count "..rand.currCount) end
 	
 	local seed = rand.currSeed + rand.currCount
 	rand.currCount = rand.currCount + 1
