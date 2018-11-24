@@ -36,6 +36,9 @@ Eplanum_TH_ViolentGrowth = Skill:new
 	
 	ForestToExpand = 1,
 	SlowEnemy = false,
+	SlowEnemyAmount = 2,
+	MinEnemyMove = 1,
+	
 }
 
 Eplanum_TH_ViolentGrowth_A = Eplanum_TH_ViolentGrowth:new
@@ -65,14 +68,20 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 		pushDir = attackDir
 	end
 	
+		
 	--if it is a forest, cancel the target's attack
 	if forestUtils.isAForest(p2) then
 		forestUtils:cancelAttack(p2, ret)
 		ret:AddBounce(p2, self.NonForestBounce)
-		
-	--otherwise if it can be floraformed, do so
+	
+	--if it can be floraformed, do so
 	elseif forestUtils.isSpaceFloraformable(p2) then
 		forestUtils:floraformSpace(ret, p2, self.Damage, pushDir, false, true)
+		
+	--otherwise damage it
+	else
+		ret:AddDamage(SpaceDamage(p2, self.Damage))
+		ret:AddBounce(p2, self.NonForestBounce)
 	end
 	
 	--small break to make the animation and move make more sense
@@ -106,19 +115,15 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	--any enemy in the forest, slow down temporarily if the powerup is enabled
 	if self.SlowEnemy then
 		for _, v in pairs(forestGroup.group) do
-			local enemy = Board:GetPawn(v)
-			if enemy then
-				local speedDiff = self.SlowEnemyMaxMove - enemy:GetMoveSpeed()
-				if enemy:IsEnemy() and speedDiff < 0 then
-					LOG("H")
-					ret:AddScript([[Board:GetPawn(]]..enemy:GetId()..[[):AddMoveBonus(]]..speedDiff..[[)]])
-					LOG("H2")
-					--ret:AddScript([
-					--	LOG("H")
-					--	Board:GetPawn(]]..v..[[):AddMoveBonus(]]..speedDiff..[[)
-					--LOG("H2")
-					--]])
-				end
+			local pawn = Board:GetPawn(v)
+			if pawn and pawn:IsEnemy() then
+				local slow = -self.SlowEnemyAmount
+				
+				if (pawn:GetMoveSpeed() - self.SlowEnemyAmount) < self.MinEnemyMove then
+					slow = self.MinEnemyMove - pawn:GetMoveSpeed()
+				end 
+				
+				ret:AddScript([[Board:GetPawn(]]..pawn:GetId()..[[):AddMoveBonus(]]..slow..[[)]])
 			end
 		end
 	end

@@ -54,7 +54,7 @@ Eplanum_TH_Passive_WakeTheForest_AB = Eplanum_TH_Passive_WakeTheForest_A:new
 function Eplanum_TH_Passive_WakeTheForest:GetSkillEffect(p1, p2)
 	local ret = SkillEffect()
 	
-	forestUtils:SetForestArmorIcon(Point(2, 2), false)
+	self:SetForestArmorIcon(Point(2, 2))
 	
 	local spaceDamage = SpaceDamage(Point(2, 2), DAMAGE_ZERO)
 	spaceDamage.sAnimation = "SwipeClaw2"
@@ -67,7 +67,7 @@ end
 function Eplanum_TH_Passive_WakeTheForest_A:GetSkillEffect(p1, p2)
 	local ret = SkillEffect()
 	
-	forestUtils:SetForestArmorIcon(Point(2, 2), true, 3)
+	self:SetForestArmorIcon(Point(2, 2), 3)
 	
 	local spaceDamage = SpaceDamage(Point(2, 2), 2, 3)
 	spaceDamage.sAnimation = "SwipeClaw2"
@@ -78,7 +78,6 @@ function Eplanum_TH_Passive_WakeTheForest_A:GetSkillEffect(p1, p2)
 end
 
 --only a preview for passive skills
---TODO Update
 function Eplanum_TH_Passive_WakeTheForest_B:GetSkillEffect(p1,p2)
 	local ret = SkillEffect()
 	
@@ -165,6 +164,62 @@ function Eplanum_TH_Passive_WakeTheForest:FloraformSpaces()
 end
 
 ------------------- FOREST ARMOR AND TREEVAC ---------------------------
+Eplanum_TH_Passive_WakeTheForest.queuedEvacs = {}
+
+function Eplanum_TH_Passive_WakeTheForest:SetForestArmorIcon(point, dir)
+	if self.Evacuate then
+		if dir and dir < 4 then
+			Board:SetTerrainIcon(point, "forestArmor_push_"..dir)
+		else
+			Board:SetTerrainIcon(point, "forestArmor_treevac")
+		end
+	else
+		Board:SetTerrainIcon(point, "forestArmor")
+	end
+end
+
+function Eplanum_TH_Passive_WakeTheForest:UnsetTerrainIcon(point)
+	Board:SetTerrainIcon(point, "")
+end
+
+function Eplanum_TH_Passive_WakeTheForest:AddQueuedEvac(pawnId, dir)
+	self.queuedEvacs[pawnId] = dir
+end
+
+function Eplanum_TH_Passive_WakeTheForest:ClearQueuedEvacs()
+	self.queuedEvacs = {}
+end
+
+function Eplanum_TH_Passive_WakeTheForest.EligibleForForestArmor(pawn)
+	if pawn:IsMech() and not pawn:IsDead() then
+		return true
+	end
+	return false
+end
+
+function Eplanum_TH_Passive_WakeTheForest:CheckAndApplyForestArmorToSpace(p, dir)
+	if forestUtils.isAForest(p) then
+		self:SetForestArmorIcon(p, dir)
+		return true
+	else
+		self:UnsetTerrainIcon(p)
+		return false
+	end
+end
+
+function Eplanum_TH_Passive_WakeTheForest:CheckAndApplyForestArmorToPawn(mech)
+	if self.EligibleForForestArmor(mech) then
+		return self:CheckAndApplyForestArmorToSpace(mech:GetSpace(), self.queuedEvacs[mech:GetId()])
+	end
+	return false
+end
+
+function Eplanum_TH_Passive_WakeTheForest:RefreshForestArmorIconToAllMechs()
+	local mechs = Board:GetPawns(TEAM_MECH)
+	for _, mechId in pairs(extract_table(mechs)) do
+		self:CheckAndApplyForestArmorToPawn(Board:GetPawn(mechId))
+	end
+end
 
 function Eplanum_TH_Passive_WakeTheForest:ApplyForestArmorToSpaceDamage(spaceDamage)
 	if self.ForestArmor then
@@ -178,7 +233,6 @@ function Eplanum_TH_Passive_WakeTheForest:ApplyForestArmorToSpaceDamage(spaceDam
 	end
 end
 
---TODO: prefer forests?
 function Eplanum_TH_Passive_WakeTheForest:ApplyEvacuateToSpaceDamage(spaceDamage, damagedPawn, attackDir, isQueued, pToIgnore)
 	--If the pawn is not on fire and on a forest and is taking damage
 	if self.Evacuate and spaceDamage.iDamage > 0 and spaceDamage.iDamage ~= DAMAGE_ZERO and spaceDamage.iDamage ~= DAMAGE_DEATH and
@@ -203,7 +257,7 @@ function Eplanum_TH_Passive_WakeTheForest:ApplyEvacuateToSpaceDamage(spaceDamage
 								
 								--if its a queued effect safe it off if its the first one so we can add the icon later
 								if isQueued then
-									forestUtils:AddQueuedEvacIfNotPresent(damagedPawn:GetId(), dir)
+									self:AddQueuedEvac(damagedPawn:GetId(), dir)
 								end
 								
 								return p + DIR_VECTORS[dir]
@@ -239,12 +293,13 @@ function Eplanum_TH_Passive_WakeTheForest:ApplyForestArmorAndEvacuate(effect, at
 	end
 end
 
+
 ------------------- MAIN HOOK FUNCTIONS ---------------------------
 
 --function to handle the postEnvironment hook functionality
 function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_PostEnvironmentHook(mission)
 	--always re-evaluate the icons - this covers environment effects like floods
-	forestUtils:RefreshForestArmorIconToAllMechs(self.Evacuate)
+	self:RefreshForestArmorIconToAllMechs()
 	
 	--StartEffect will be true for the first time and env effect is called
 	--EndEffect will be false for the last time and env effect is called
@@ -257,10 +312,10 @@ function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_PostEnvironmentH
 	self:ApplyRevenge()
 
 	--floraform the spaces
+	--TODO this will sometimes terraform flooded spaces...
 	self:FloraformSpaces()
 end
 
---TODO track which ones are built vs which are executed to store which way the mechs should be pushed. Check how cancelled attacks work with this
 local prevMoveLocation = nil
 function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_SkillBuildHook(mission, pawn, weaponId, p1, p2, skillFx)
 	
@@ -271,42 +326,41 @@ function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_SkillBuildHook(m
 		
 	--If we have a previous move location, clear it
 	if prevMoveLocation then
-		forestUtils:UnsetTerrainIcon(prevMoveLocation)
+		self:UnsetTerrainIcon(prevMoveLocation)
 	end
 	
 	--skill build hooks 
 	if weaponId == "Move" then
-		forestUtils:ClearQueuedEvacs()
+		self:ClearQueuedEvacs()
 		prevMoveLocation = p2
 		
 	--if its not a move, refresh all mechs armor
 	else
-		forestUtils:RefreshForestArmorIconToAllMechs(self.Evacuate)
+		self:RefreshForestArmorIconToAllMechs()
 	end
 end
 
 --Clear the queued pushes. They will be re-added by the skill build hooks. We need to do this each time
 --a move is executed, or the position is undone or the pawn is deselected (preview move cancelled). This 
 --will allow the table to be repopulated with the recalculated queued effects
-function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_SkillEndHook(mission, pawn, weaponId, p1, p2)
-	forestUtils:ClearQueuedEvacs()
+	self:ClearQueuedEvacs()
 end
 
 function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_QueuedSkillEndHook(mission, pawn, weaponId, p1, p2)
-	forestUtils:ClearQueuedEvacs()
+	self:ClearQueuedEvacs()
 end
 
 function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_PawnUndoMoveHook(mission, pawn)
-	forestUtils:ClearQueuedEvacs()
+	self:ClearQueuedEvacs()
 end
 
 function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_PawnDeselectedHook(mission, pawn)
-	forestUtils:ClearQueuedEvacs()
+	self:ClearQueuedEvacs()
 end
 
 --Each time the pawn changes positions, we need to make sure to clear the old location
 function Eplanum_TH_Passive_WakeTheForest:GetPassiveSkillEffect_PawnPositionChangedHook(mission, pawn, oldPos)
-	forestUtils:UnsetTerrainIcon(oldPos)
+	self:UnsetTerrainIcon(oldPos)
 end
 
 passiveEffect:addPassiveEffect("Eplanum_TH_Passive_WakeTheForest", 
