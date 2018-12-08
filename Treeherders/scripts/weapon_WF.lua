@@ -207,7 +207,7 @@ function Eplanum_TH_Passive_WakeTheForest:AddUpdateQueuedAttack(weaponId, p1, sk
 	if pawn then
 		local pId = pawn:GetId()
 		if self.pawnIdToAttack[pId] then
-			LOG("UPDATED "..self.pawnIdToAttack[pId])
+			--LOG("UPDATED "..self.pawnIdToAttack[pId])
 			self.queuedAttacks[self.pawnIdToAttack[pId]] = skillFx
 			self.queuedAttacksOrigins[self.pawnIdToAttack[pId]] = p1
 			self.queuedAttacksWeaponId[self.pawnIdToAttack[pId]] = weaponId
@@ -216,7 +216,7 @@ function Eplanum_TH_Passive_WakeTheForest:AddUpdateQueuedAttack(weaponId, p1, sk
 			table.insert(self.queuedAttacksOrigins, p1)
 			table.insert(self.queuedAttacksWeaponId, weaponId)
 			self.pawnIdToAttack[pId] = #self.queuedAttacks
-			LOG("Added "..self.pawnIdToAttack[pId])
+			--LOG("Added "..self.pawnIdToAttack[pId])
 		end
 		
 		if self.pawnIdToAttackId[pId] then
@@ -230,7 +230,7 @@ function Eplanum_TH_Passive_WakeTheForest:AddUpdateQueuedAttack(weaponId, p1, sk
 	--killed and burrows wont have a pawn at p1
 	--TODO: how does this work with cancelled and pushed off attacks?
 	elseif self.attackIdToPawnId[key] then
-		LOG("NO PAWN")
+		--LOG("NO PAWN")
 		self:RemoveQueuedAttacks(self.attackIdToPawnId[key])
 	end
 end
@@ -270,26 +270,26 @@ function Eplanum_TH_Passive_WakeTheForest:RefreshForestArmorIconToAllMechs()
 		self:ApplyForestArmorAndEvacuate(self.queuedAttacks[i].q_effect, self.queuedAttacksOrigins[i], true, self.queuedAttacksWeaponId[i]..self.queuedAttacksOrigins[i]:GetString())
 	end
 
-	--show the images
+	--[[show the images
 	LOG("evacs")
 	for _, attacks in pairs(self.queuedEvacs) do
 		for _, evac in pairs(attacks) do
 			LOG("evac "..evac.loc:GetString())
 		end
-	end	
+	end	]]
 	
 	local mechs = Board:GetPawns(TEAM_MECH)
 	for _, mechId in pairs(extract_table(mechs)) do
 		local space = Board:GetPawnSpace(mechId)
 		
 		local pushDir = nil
-		for _, attacks in pairs(self.queuedEvacs) do
+		--[[for _, attacks in pairs(self.queuedEvacs) do
 			for _, evac in pairs(attacks) do
 				if evac.loc == space then
 					pushDir = evac.iPush
 				end
 			end
-		end	
+		end	--]]
 		
 		self:CheckAndApplyForestArmorToSpace(space, pushDir)
 	end
@@ -312,14 +312,14 @@ function Eplanum_TH_Passive_WakeTheForest:ApplyEvacuateToSpaceDamage(spaceDamage
 	if self.Evacuate and spaceDamage.iDamage > 0 and spaceDamage.iDamage ~= DAMAGE_ZERO and spaceDamage.iDamage ~= DAMAGE_DEATH and
 					not (damagedPawn:IsShield() or damagedPawn:IsFire() or forestUtils.isAForestFire(spaceDamage.loc)) then
 			
-		for _, attacks in pairs(self.queuedEvacs) do
+		--[[for _, attacks in pairs(self.queuedEvacs) do
 			for _, evacs in pairs(attacks) do
 				if evacs.loc == spaceDamage.loc then
 					LOG(attackId.." return early "..spaceDamage.loc:GetString())
 					return nil
 				end
 			end
-		end
+		end--]]
 					
 		local attackDir = GetDirection(spaceDamage.loc - attackOrigin)
 		local dirPreferences = { (attackDir - 1) % 4, (attackDir + 1) % 4, attackDir, (attackDir + 2) % 4 }
@@ -345,10 +345,10 @@ function Eplanum_TH_Passive_WakeTheForest:ApplyEvacuateToSpaceDamage(spaceDamage
 								spaceDamage.iPush = dir
 								
 								--if its a queued effect safe it off if its the first one so we can add the icon later
-								if isQueued then
+								--[[if isQueued then
 									LOG("queue "..attackId.." "..spaceDamage.loc:GetString())
 									table.insert(self.queuedEvacs[attackId], spaceDamage)
-								end
+								end--]]
 								
 								return p + DIR_VECTORS[dir]
 							end
