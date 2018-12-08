@@ -215,7 +215,8 @@ function forestUtils:cancelAttack(p, effect)
 		if enemy then
 			enemy:ClearQueued()
 		end
-		Board:Ping(Point(]]..p.x..","..p.y..[[), GL_Color(210, 210, 210, 0))
+		Board:Ping(]].. p:GetString() ..[[, GL_Color(210, 210, 210, 0))
+		Board:AddAlert(]].. p:GetString() ..[[, Global_Texts["Alert_Cleared"])
 	]])
 	effect:AddDamage(SpaceDamage(p, DAMAGE_ZERO))
 end
