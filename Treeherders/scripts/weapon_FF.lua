@@ -93,23 +93,17 @@ function Eplanum_TH_ForestFire:GetSkillEffect(p1, p2)
 		forestUtils:floraformSpace(ret, pBack)
 	end
 
-	local damage = forestUtils:getFloraformSpaceDamage(p2, self.Damage, nil, false, not self.BuildingDamage)
-	if (not self.BuildingDamage) and Board:IsBuilding(p2) then
-		damage.iDamage = DAMAGE_ZERO
-	end
-	
+	local damage = forestUtils:getFloraformSpaceDamage(p2, self.Damage, attackDir, false, not self.BuildingDamage)
 	ret:AddBounce(p1, 1)
 	ret:AddArtillery(damage, self.UpShot)
 	ret:AddBounce(p2, 1)
 	
-	for dir = 0, 3 do
+	local dirs = {attackDir + 1, attackDir - 1}
+	for _, dir in pairs(dirs) do
+		dir = dir % 4
 		local currP = p2 + DIR_VECTORS[dir]
 		local sideDamage = forestUtils:getSpaceDamageWithoutSettingFire(currP, self.DamageOuter, dir, false, not self.BuildingDamage)
 		sideDamage.sAnimation = self.OuterAnimation..dir
-		
-		if (not self.BuildingDamage) and Board:IsBuilding(currP) then	
-			sideDamage.iDamage = 0
-		end
 		
 		ret:AddDamage(sideDamage)
 		if self.BounceOuterAmount ~= 0 then	
