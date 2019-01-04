@@ -339,7 +339,7 @@ function Eplanum_TH_Passive_WakeTheForest:ApplyEvacuateToSpaceDamage(spaceDamage
 						--If its non harmful based on the units attributes
 						if (terrain ~= TERRAIN_EMPTY or damagedPawn:IsFlying()) and (terrain ~= TERRAIN_WATER or damagedPawn.Massive) then
 							--If its unocupied and not in danger
-							if not (Board:IsPawnSpace(p) or Board:IsFire(p) or Board:IsAcid(p) or Board:IsSpawning(p) or Board:IsDangerous(p)) then
+							if not (Board:IsPawnSpace(p) or Board:IsFire(p) or Board:IsAcid(p) or Board:IsSpawning(p) or Board:IsDangerous(p) or Board:IsEnvironmentDanger(p)) then
 							
 								--we found a good spot to push the pawn to
 								spaceDamage.iPush = dir

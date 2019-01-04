@@ -206,17 +206,17 @@ function forestUtils:floraformNumOfRandomSpaces(effect, randId, candidates, numT
 	return retList
 end
 
---TODO remove once integrated into modutils
--------------------  TEMP MODUTIL FUNCTIONS  ----------------------------
+--TODO remove once isolated to library or mod utils
+-------------------  TEMP FUNCTIONS  ----------------------------
 
 function forestUtils:cancelAttack(p, effect)
 	effect:AddScript([[
 		local enemy = Board:GetPawn(Point(]]..p.x..","..p.y..[[))
 		if enemy then
 			enemy:ClearQueued()
+			Board:AddAlert(]].. p:GetString() ..[[, Global_Texts["Alert_Cleared"])
 		end
 		Board:Ping(]].. p:GetString() ..[[, GL_Color(210, 210, 210, 0))
-		Board:AddAlert(]].. p:GetString() ..[[, Global_Texts["Alert_Cleared"])
 	]])
 	effect:AddDamage(SpaceDamage(p, DAMAGE_ZERO))
 end
@@ -343,6 +343,26 @@ function forestUtils:isSpaceSurroundedBy(space, predicate, ...)
 	return true
 end
 
+function forestUtils:getClosestOfSpaces(space, otherSpaces)
+	assert(type(otherSpaces) == "table")
+	
+	local closest = nil
+	local closestDistance = 999 --much larger than should ever exist
+	local dist = 0
+	
+	for _, s in pairs(otherSpaces) do
+		dist = Board:GetDistance(space, s)
+		
+		if dist < closestDistance then
+			closestDistance = dist
+			closest = s
+		end
+	end
+	
+	return closest
+end
+
+--TODO already in modutils or modloader (not sure which)
 function forestUtils:getSpaceHash(spaceOrX, y)
     local pX = spaceOrX
     local pY = y

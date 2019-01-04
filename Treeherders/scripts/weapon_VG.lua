@@ -56,18 +56,17 @@ Eplanum_TH_ViolentGrowth_AB = Eplanum_TH_ViolentGrowth_A:new
 	ForestToExpand = 3,
 }
 			
+--TODO make match new description
 function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
-	local randId = "Eplanum_TH_ViolentGrowth"..tostring(Pawn:GetId())
-
 	local ret = SkillEffect()
 	local attackDir = GetDirection(p2 - p1)
 	
-	--generate forest on target and damage it
+	
+	----- For the main target ------
 	local pushDir = nil
 	if self.PushTarget then
 		pushDir = attackDir
 	end
-	
 		
 	--if it is a forest, cancel the target's attack
 	if forestUtils.isAForest(p2) then
@@ -78,7 +77,7 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	elseif forestUtils.isSpaceFloraformable(p2) then
 		forestUtils:floraformSpace(ret, p2, self.Damage, pushDir, false, true)
 		
-	--otherwise damage it
+	--otherwise just damage it
 	else
 		ret:AddDamage(SpaceDamage(p2, self.Damage))
 		ret:AddBounce(p2, self.NonForestBounce)
@@ -87,17 +86,46 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	--small break to make the animation and move make more sense
 	ret:AddDelay(0.4)
 	
+	
+	----- For expansion ------
+	
+	--pick tiles to expand to and damage if appropriate
+	--get tiles closest to enemies
+	local expansionFocus = p1
+	if self.SeekVek then
+		local vekPositions = {}
+		for _, v in pairs(extract_table(Board:GetPawns(TEAM_ENEMY))) do
+			local vPos = v:GetSpace()
+			vekPositions[forestUtils:getSpaceHash(vPos)] = vPos
+		end
+		
+		if vekPositions ~= {} then
+			expansionFocus = forestUtils:getClosestOfSpaces(p1, vekPositions)
+		end
+	end
+	
 	--Get all spaces in the grouping
 	local forestGroup = forestUtils:getGroupingOfSpaces(p2, forestUtils.isAForest)
 	--ensure the space we just formed is not in the boarding list - it will be in the group list
 	forestGroup.boardering[forestUtils:getSpaceHash(p2)] = nil
 	
-	--pick tiles to expand to and damage if appropriate
-	local newForests = forestUtils:floraformNumOfRandomSpaces(ret, randId, forestGroup.boardering, self.ForestToExpand,
-								self.Damage, nil, true, true, true, nil, self.SeekVek, forestUtils:getSpaceHash(p1) + (forestUtils:getSpaceHash(p2) * 100))
+	local newForests = {}
+	for i = 1, self.ForestToExpand do
+		if forestGroup.boardering ~= {} then
+			--get the nearest point, and remove it from the candidates
+			local expansion = forestUtils:getClosestOfSpaces(expansionFocus, forestGroup.boardering)
+			forestGroup.boardering[forestUtils:getSpaceHash(expansion)] = nil
+			newForests[forestUtils:getSpaceHash(expansion)] = expansion
+			
+			--floraform it
+			forestUtils:floraformSpace(ret, expansion, self.Damage, nil, false, true)
+		end
+	end
 	newForests[forestUtils:getSpaceHash(p2)] = p2
 	
-			
+	
+	----- for pushing target -----
+	
 	--evaluate if we are pushing a fire unit onto a space we are floraforming because otherwise
 	--we will put out the enemy
 	if self.PushTarget then
@@ -111,6 +139,9 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 			end
 		end
 	end
+	
+	
+	----- For slowing enemies -----
 	
 	--any enemy in the forest, slow down temporarily if the powerup is enabled
 	if self.SlowEnemy then
