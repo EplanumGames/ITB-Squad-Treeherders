@@ -1,7 +1,3 @@
-High
-8. Implement new expantion pattern for violent growth
-
-Medium
 6. More animations and SFX
 	a. Fire trees from forest?
 9. Investigate memory leak!!! (probably in attempts to track enemy attacks or something - pull out old code where possible)
@@ -11,3 +7,4 @@ Medium
 Low
 10. Add description of some common things in readme files and forum thread
 7. Wake the forest teraforms sunken tiles ocassionally on flood maps
+11. Forest icons show up on forest fires if you move over them quickly with units

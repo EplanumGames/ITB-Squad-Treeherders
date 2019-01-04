@@ -55,8 +55,7 @@ Eplanum_TH_ViolentGrowth_AB = Eplanum_TH_ViolentGrowth_A:new
 {	
 	ForestToExpand = 3,
 }
-			
---TODO make match new description
+
 function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	local ret = SkillEffect()
 	local attackDir = GetDirection(p2 - p1)
@@ -95,12 +94,14 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	if self.SeekVek then
 		local vekPositions = {}
 		for _, v in pairs(extract_table(Board:GetPawns(TEAM_ENEMY))) do
-			local vPos = v:GetSpace()
-			vekPositions[forestUtils:getSpaceHash(vPos)] = vPos
+			local vPos = Board:GetPawnSpace(v)
+			if not forestUtils.isAForest(vPos) then
+				vekPositions[forestUtils:getSpaceHash(vPos)] = vPos
+			end
 		end
 		
-		if vekPositions ~= {} then
-			expansionFocus = forestUtils:getClosestOfSpaces(p1, vekPositions)
+		if forestUtils.arrayLength(vekPositions) > 0 then
+			expansionFocus = forestUtils:getClosestOfSpaces(p2, vekPositions)
 		end
 	end
 	
@@ -109,16 +110,23 @@ function Eplanum_TH_ViolentGrowth:GetSkillEffect(p1, p2)
 	--ensure the space we just formed is not in the boarding list - it will be in the group list
 	forestGroup.boardering[forestUtils:getSpaceHash(p2)] = nil
 	
+	local candidates = {}
+	for k, v in pairs(forestGroup.boardering) do
+		if forestUtils.isSpaceFloraformable(v) and v ~= p2 then
+			candidates[k] = v
+		end
+	end
+	
 	local newForests = {}
 	for i = 1, self.ForestToExpand do
-		if forestGroup.boardering ~= {} then
+		if forestUtils.arrayLength(candidates) > 0 then
 			--get the nearest point, and remove it from the candidates
-			local expansion = forestUtils:getClosestOfSpaces(expansionFocus, forestGroup.boardering)
-			forestGroup.boardering[forestUtils:getSpaceHash(expansion)] = nil
+			local expansion = forestUtils:getClosestOfSpaces(expansionFocus, candidates)
+			candidates[forestUtils:getSpaceHash(expansion)] = nil
 			newForests[forestUtils:getSpaceHash(expansion)] = expansion
 			
 			--floraform it
-			forestUtils:floraformSpace(ret, expansion, self.Damage, nil, false, true)
+			forestUtils:floraformSpace(ret, expansion, self.Damage, nil, true, true)
 		end
 	end
 	newForests[forestUtils:getSpaceHash(p2)] = p2

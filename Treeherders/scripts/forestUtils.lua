@@ -351,8 +351,8 @@ function forestUtils:getClosestOfSpaces(space, otherSpaces)
 	local dist = 0
 	
 	for _, s in pairs(otherSpaces) do
-		dist = Board:GetDistance(space, s)
-		
+		--Board:GetDistance() doesn't seem to work consistently so do it ourselves
+		dist = math.abs(space.x - s.x) +  math.abs(space.y - s.y)
 		if dist < closestDistance then
 			closestDistance = dist
 			closest = s

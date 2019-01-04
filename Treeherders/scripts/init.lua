@@ -119,8 +119,8 @@ end
 
 return {
     id = "eplanum_treeherders",
-    name = "Tree Herders",
-    version = "0.9.0",
+    name = "Treeherders",
+    version = "0.9.1",
 	requirements = { "kf_ModUtils" },
 	icon = "img/mod_icon.png",
     init = init,

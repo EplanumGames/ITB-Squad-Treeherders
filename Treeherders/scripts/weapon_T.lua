@@ -10,7 +10,7 @@ Eplanum_TH_Treevenge = Skill:new
 	Range = 1,
 	PathSize = 1,
 	Projectile = false,
-    Damage = 3,
+    Damage = 2,
 	
     PowerCost = 0,
     Upgrades = 2,
@@ -38,6 +38,15 @@ Eplanum_TH_Treevenge = Skill:new
 Eplanum_TH_Treevenge_A = Eplanum_TH_Treevenge:new
 {
 	BuildingImmune = true,
+    TipImage = {
+		Unit = Point(2,3),
+		Target = Point(2,2),
+		Enemy = Point(3,2),
+		Enemy2 = Point(2,1),
+		Building = Point(2,2),
+		Forest = Point(3,1),
+		Fire = Point(3,1),
+	},
 }
 
 Eplanum_TH_Treevenge_B = Eplanum_TH_Treevenge:new
@@ -45,9 +54,9 @@ Eplanum_TH_Treevenge_B = Eplanum_TH_Treevenge:new
 	DoesSplashDamage = true,
 }
 
-Eplanum_TH_Treevenge_AB = Eplanum_TH_Treevenge_A:new
+Eplanum_TH_Treevenge_AB = Eplanum_TH_Treevenge_B:new
 {
-	DoesSplashDamage = true,
+	BuildingImmune = true,
 }
 
 function Eplanum_TH_Treevenge:GetSkillEffect(p1, p2)
