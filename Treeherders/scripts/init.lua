@@ -107,7 +107,7 @@ local function load(self, options, version)
 	treeherders_modApiExt:load(self, options, version)
 	
 	modApi:addSquadTrue(
-		{"Treeherders", "TH_EntborgMech", "TH_ForestFirerMech", "TH_ArbiformerMech"}, "Tree Herders", 
+		{"Treeherders", "TH_EntborgMech", "TH_ForestFirerMech", "TH_ArbiformerMech"}, "Treeherders", 
 		"One with the forests, these mechs harness natures power to defend earth from the vek onslaught", 
 		self.resourcePath.."img/squad.png")
 	
@@ -120,7 +120,7 @@ end
 return {
     id = "eplanum_treeherders",
     name = "Tree Herders",
-    version = "1.0.0",
+    version = "0.9.0",
 	requirements = { "kf_ModUtils" },
 	icon = "img/mod_icon.png",
     init = init,

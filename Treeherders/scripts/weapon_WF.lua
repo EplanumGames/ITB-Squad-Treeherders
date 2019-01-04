@@ -264,10 +264,10 @@ function Eplanum_TH_Passive_WakeTheForest:RefreshForestArmorIconToAllMechs()
 	
 	--Forest armor and treevac effects for both immediate and queued attacks
 	for i = 1, #self.queuedAttacks do
-		self:ApplyForestArmorAndEvacuate(self.queuedAttacks[i].effect, self.queuedAttacksOrigins[i], false, self.queuedAttacksWeaponId[i]..self.queuedAttacksOrigins[i]:GetString())
+		self:ApplyForestArmorAndEvacuate(self.queuedAttacks[i].effect, self.queuedAttacksOrigins[i], false, "") --self.queuedAttacksWeaponId[i]..self.queuedAttacksOrigins[i]:GetString())
 	end
 	for i = 1, #self.queuedAttacks do
-		self:ApplyForestArmorAndEvacuate(self.queuedAttacks[i].q_effect, self.queuedAttacksOrigins[i], true, self.queuedAttacksWeaponId[i]..self.queuedAttacksOrigins[i]:GetString())
+		self:ApplyForestArmorAndEvacuate(self.queuedAttacks[i].q_effect, self.queuedAttacksOrigins[i], true, "") --self.queuedAttacksWeaponId[i]..self.queuedAttacksOrigins[i]:GetString())
 	end
 
 	--[[show the images

@@ -10,7 +10,7 @@ Eplanum_TH_Treevenge = Skill:new
 	Range = 1,
 	PathSize = 1,
 	Projectile = false,
-    Damage = 2,
+    Damage = 3,
 	
     PowerCost = 0,
     Upgrades = 2,

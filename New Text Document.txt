@@ -1,0 +1,9 @@
+1. Attack canceled appears on empty tiles
+2. Simplify violent growth and Wake the Forest
+3. Consider modiifying treevenge to deal damage inversely to the forest fires
+4. wake the forest pushes into airstrike and similar tiles
+5. Replace seek vek in violent growth with something else
+
+6. More animations
+7. Wake the forest teraforms sunken tiles
+8. COnsider expantion pattern for violent growth
